@@ -1,4 +1,4 @@
-// https://codepen.io/gissehel/pen/PbNZOq
+// https://codepen.io/gissehel/full/PbNZOq
 
 (function () {
   var Clock, clock;
