@@ -1,5 +1,5 @@
 body {
-  background: url(./leh.jpg);
+  background: url(./forest.jpg);
   background-size: cover;
 }
 #clock {
@@ -21,4 +21,32 @@ body {
   font-family: monospace;
   /* font-weight: 200; */
   text-shadow: 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
+}
+
+#second-ripple{
+  display: none;
+}
+#second-ripple.active {
+  display: block;
+  /* opacity: 0.3; */
+  stroke: #f00;
+  /* filter: blur(0); */
+  stroke-width: .2;
+  animation: ripple 1s linear infinite;
+}
+@keyframes ripple {
+  0% {
+  }
+  75% {
+    stroke: #f000;
+    filter: blur(.05px);
+    transform: scale(8);
+    stroke-width: .05;
+  }
+  100% {
+    stroke: #f000;
+    filter: blur(.05px);
+    transform: scale(8);
+    stroke-width: 0.05;
+  }
 }

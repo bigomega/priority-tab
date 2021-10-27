@@ -4,11 +4,14 @@ class Clock {
     hour_direction_switch = false,
     offset = 12,
     $container = document.querySelector('#clock'),
-    ticker = true,
+    second_ticker = true,
+    second_ripple = false,
   } = {}){
     this.hour_hand_color = hour_hand_color
     this.hour_direction_switch = hour_direction_switch
     this.offset = offset
+    this.second_ripple = second_ripple
+    this.second_ticker = second_ticker
     this.$container = $container
   }
 
@@ -43,22 +46,28 @@ class Clock {
 
   _getMinuteText({ minutes = 0, text = '00', seconds = 0 } = {}) {
     const rotation = 360 / 60 * minutes
+    const tick = this.second_ticker ? (seconds % 2 ? '&nbsp;' : ':') : ''
     const color = '#fff'
     const depth = 94
     const size = .5
-    return `<g id="minute-text" style="transform:rotate(${rotation+180}deg) translate(-6px,${depth}px);font-size:${size}em;" fill="${color}"><text x="0" y="0" style="transform:rotate(${-rotation+180}deg);transform-origin:6px 0px;">${seconds%2 ? ':' : '<nbsp/>'}${text}</text></g>`
+    return `<g id="minute-text" style="transform:rotate(${rotation + 180}deg) translate(-6px,${depth}px);font-size:${size}em;" fill="${color}"><text x="0" y="0" style="transform:rotate(${-rotation + 180}deg);transform-origin:6px 0px;">${tick}${text}</text></g>`
+  }
+
+  _getHourTheta({ hours = 0 } = {}) {
+    return 360 / 24 * (hours + this.offset) * (this.hour_direction_switch ? -1 : 1)
   }
 
   _getHourHand({hours=0} = {}) {
-    const rotation = 360 / 24 * (hours+this.offset) * (this.hour_direction_switch ? -1 : 1)
+    const rotation = this._getHourTheta({hours})
     const stroke_width = .5
-    const hour_hand_stroke_color = '#000'
-    const hand_length = 60
+    const stroke_color = '#000'
+    const length = 60
+    const width = 3.5
     return `
-      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${hour_hand_stroke_color}" fill="${this.hour_hand_color}">
-        <circle cx="0" cy="0" r="3.5" stroke-width="${stroke_width}"/>
-        <polygon points="-3.5,0 3.5,0 .4,${hand_length} -.4,${hand_length}" stroke-width="${stroke_width}"></polygon>
-        <rect x="-3.3" y="-.5" width="6.6" height="1" stroke-width="0"/>
+      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${stroke_color}" fill="${this.hour_hand_color}" stroke-width="${stroke_width}">
+        <circle cx="0" cy="0" r="${width}"/>
+        <polygon points="${-width},0 ${width},0 .4,${length} -.4,${length}"></polygon>
+        <rect x="${-width + stroke_width}" y="-.1" width="${(width-stroke_width)*2}" height="${stroke_width}" stroke="${this.hour_hand_color}" />
       </g>
     `
   }
@@ -80,6 +89,7 @@ class Clock {
     const num_hours = hours + num_minutes / 60;
     // <circle cx="0" cy="0" r="100" fill="#ccc"/>
     const globe_size = 170
+    const ripple_color = '#f00'
     this.$container.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">
         <defs>
@@ -87,12 +97,13 @@ class Clock {
             <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="./Azimuthal_equidistant_projection_SW-2.png"></image>
           </pattern>
         </defs>
-        <circle cx="0" cy="0" r="95" fill="url(#clock-image)"/>
+        <circle cx="0" cy="0" r="${globe_size/2}" fill="url(#clock-image)"/>
+        <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"/>
         ${this._getHourMarkers({hours})}
-        ${this._getMinuteHand({minutes: num_minutes})}
+        ${this._getMinuteHand({minutes})}
         ${this._getHourHand({hours: num_hours})}
         <g>
-        ${this._getMinuteText({ minutes: num_minutes, text: ('0'+minutes).slice(-2), seconds })}
+        ${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}
         </g>
         ${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}
       </svg>
@@ -113,18 +124,19 @@ class Clock {
     const seconds = now.getSeconds();
     const num_minutes = minutes + seconds / 60;
     const num_hours = hours + num_minutes / 60;
-    const minute_theta = 360/60 * num_minutes
-    const hour_theta = 360 / 60 * (num_hours + this.offset) * (this.hour_direction_switch ? -1 : 1)
+    const minute_theta = 360/60 * minutes
+    const hour_theta = this._getHourTheta({hours: num_hours})
 
     this.$minute_hand.style.transform = `rotate(${minute_theta+180}deg)`
     this.$hour_hand.style.transform = `rotate(${hour_theta}deg)`
-    // this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes: num_minutes, text: ('0' + minutes).slice(-2), seconds })
+    this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes, text: ('0' + minutes).slice(-2), seconds })
+    this.$minute_text = this.$container.querySelector('#minute-text')
   }
 }
 
 
-// const clock = new Clock({ hour_direction_switch: true, offset: 0 })
+// const clock = new Clock({ hour_direction_switch: true, offset: 0, second_ripple: false, second_ticker: false })
 const clock = new Clock
 clock.draw()
-// const redraw_timer = 1000
-// redraw_timer && setInterval(_ => clock.reDraw(), redraw_timer)
+const redraw_timer = 1000
+redraw_timer && setInterval(_ => clock.reDraw(), redraw_timer)
