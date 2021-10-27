@@ -1,0 +1,13 @@
+#clock {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+#clock svg {
+  width: 650px;
+  height: 650px;
+}
+#clock svg .hour-marker {
+  transform-origin: 0% 0%;
+  stroke: #000;
+}

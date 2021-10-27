@@ -9,7 +9,8 @@
   },
   "permissions": [
     "storage",
-    "source.unsplash.com"
+    "source.unsplash.com",
+    "https://calendar.google.com"
   ],
   "icons": {
   }
