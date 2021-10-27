@@ -23,6 +23,11 @@ body {
   text-shadow: 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
 }
 
+#sun {
+  fill: yellow;
+  filter: drop-shadow(0px 0px 0.1px #ffa500) drop-shadow(0px 0px 1px #fa0f) drop-shadow(0px 0px 1px #fa09) drop-shadow(0px 0px 1px #ff09) drop-shadow(0px 0px 1px #fff)  drop-shadow(0px 0px 2px #fff);
+}
+
 #second-ripple{
   display: none;
 }

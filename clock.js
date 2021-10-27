@@ -1,3 +1,17 @@
+function getSolarDeclination(now) {
+  function getDayOfYear() {
+    // var now = new Date();
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    var oneDay = 1000 * 60 * 60 * 24;
+    var dayOfYear = Math.floor(diff / oneDay);
+    return dayOfYear + 284
+  }
+
+  return 23.44 * Math.sin((360 / 365.25) * getDayOfYear() * Math.PI / 180)
+  // https://stackoverflow.com/questions/62184648/how-to-calculate-the-latitude-of-the-subsolar-point-ie-solar-declination-usin
+}
+
 class Clock {
   constructor({
     hour_hand_color = '#fff',
@@ -7,6 +21,7 @@ class Clock {
     second_ticker = true,
     second_ripple = false,
     location_marker = true,
+    sun_marker = true,
   } = {}){
     this.hour_hand_color = hour_hand_color
     this.hour_direction_switch = hour_direction_switch
@@ -14,7 +29,9 @@ class Clock {
     this.second_ripple = second_ripple
     this.second_ticker = second_ticker
     this.location_marker = location_marker
+    this.sun_marker = sun_marker
     this.$container = $container
+    this.position = null
   }
 
   _getHourMarkers({depth=14, small=1, medium=1.5, large=2, hours} = {}) {
@@ -90,19 +107,21 @@ class Clock {
     }
   }
 
-  _getCurrentLocation(){
-    this.$location_marker_rotate.style.display = 'block'
+  _getCurrentLocation(cb, err) {
+    if (this.position) {
+      return cb(this.position)
+    }
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
-        const {translate, rotate} = this._getTransformForLatLong(position.coords)
-        this.$location_marker_rotate.style.transform = `rotate(${rotate}deg)`
-        this.$location_marker_translate.style.transform = `translate(0, ${translate}px)`
+        // position = { coords: { latitude: 40.7128, longitude: -74.0060}}
+        this.position = position
+        cb(position)
       }, error => {
         console.error(error)
-        this.$location_marker_rotate.style.display = 'none'
+        err(error)
       });
     } else {
-      this.$location_marker_rotate.style.display = 'none'
+      err({ msg: 'Object missing: navigator.geolocation'})
     }
   }
 
@@ -127,9 +146,6 @@ class Clock {
         <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"/>
         ${this._getHourMarkers({hours})}
         ${this._getMinuteHand({minutes})}
-        ${this._getHourHand({hours: num_hours})}
-        <g>${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}</g>
-        ${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}
         <g id="location-marker-rotate"><g id="location-marker-translate"><g style="transform:scale(1.5)" fill="#f00" stroke="#f00" stroke-width=".2">
           ${
             this.location_marker ?
@@ -142,6 +158,12 @@ class Clock {
             : ''
           }
         </g></g></g>
+        <g id="sun-marker-rotate"><g id="sun-marker-translate">
+          ${this.sun_marker ? '<circle id="sun" cx="0" cy="0" r="3"/>' : ''}
+        </g></g>
+        ${this._getHourHand({hours: num_hours})}
+        <g>${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}</g>
+        ${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}
       </svg>
     `
 
@@ -151,7 +173,22 @@ class Clock {
     this.$minute_text = this.$container.querySelector('#minute-text')
     this.$location_marker_rotate = this.$container.querySelector('#location-marker-rotate')
     this.$location_marker_translate = this.$container.querySelector('#location-marker-translate')
-    this._getCurrentLocation()
+    this.$sun_marker_rotate = this.$container.querySelector('#sun-marker-rotate')
+    this.$sun_marker_translate = this.$container.querySelector('#sun-marker-translate')
+
+    this._getCurrentLocation(({ coords = {latitude:0,longitude:0} } = {}) => {
+      // update current location
+      this.$location_marker_rotate.dataset.coords = coords
+      const { translate: gps_translate, rotate: gps_rotate } = this._getTransformForLatLong(coords)
+      this.$location_marker_rotate.style.transform = `rotate(${gps_rotate}deg)`
+      this.$location_marker_translate.style.transform = `translate(0, ${gps_translate}px)`
+      // update sun position
+      const sun_pos = { latitude: getSolarDeclination(now), longitude: coords.longitude + (360 / 24 * (12 - num_hours)) }
+      this.$sun_marker_rotate.dataset.coords = sun_pos
+      const { translate: sun_translate, rotate: sun_rotate } = this._getTransformForLatLong(sun_pos)
+      this.$sun_marker_rotate.style.transform = `rotate(${sun_rotate}deg)`
+      this.$sun_marker_translate.style.transform = `translate(0, ${sun_translate}px)`
+    })
   }
 
   reDraw() {
