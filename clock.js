@@ -6,12 +6,14 @@ class Clock {
     $container = document.querySelector('#clock'),
     second_ticker = true,
     second_ripple = false,
+    location_marker = true,
   } = {}){
     this.hour_hand_color = hour_hand_color
     this.hour_direction_switch = hour_direction_switch
     this.offset = offset
     this.second_ripple = second_ripple
     this.second_ticker = second_ticker
+    this.location_marker = location_marker
     this.$container = $container
   }
 
@@ -80,6 +82,30 @@ class Clock {
     return `<g id="hour-text" style="transform:rotate(${rotation}deg) translate(-10px,${depth}px);font-size:${size}em;" fill="${color}"><text x="0" y="0" style="transform:rotate(${-rotation}deg);transform-origin:10px -5px;">${text}</text></g>`
   }
 
+  _getTransformForLatLong({ latitude = 0, longitude = 0 } ={}){
+    // Lat 15˚= 7px
+    return {
+      translate: (90-latitude) / 15 * 7,
+      rotate: -longitude,
+    }
+  }
+
+  _getCurrentLocation(){
+    this.$location_marker_rotate.style.display = 'block'
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const {translate, rotate} = this._getTransformForLatLong(position.coords)
+        this.$location_marker_rotate.style.transform = `rotate(${rotate}deg)`
+        this.$location_marker_translate.style.transform = `translate(0, ${translate}px)`
+      }, error => {
+        console.error(error)
+        this.$location_marker_rotate.style.display = 'none'
+      });
+    } else {
+      this.$location_marker_rotate.style.display = 'none'
+    }
+  }
+
   draw() {
     const now = new Date()
     const hours = now.getHours();
@@ -102,16 +128,30 @@ class Clock {
         ${this._getHourMarkers({hours})}
         ${this._getMinuteHand({minutes})}
         ${this._getHourHand({hours: num_hours})}
-        <g>
-        ${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}
-        </g>
+        <g>${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}</g>
         ${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}
+        <g id="location-marker-rotate"><g id="location-marker-translate"><g style="transform:scale(1.5)" fill="#f00" stroke="#f00" stroke-width=".2">
+          ${
+            this.location_marker ?
+            `<circle cx="0" cy="0" r="1.5" fill="#ffffffa3" />
+            <circle cx="0" cy="0" r=".3" stroke-width=".5"/>
+            <line x1="1.5" y1="0" x2="2.4" y2="0"></line>
+            <line x1="-1.5" y1="0" x2="-2.4" y2="0"></line>
+            <line y1="1.5" x1="0" y2="2.4" x2="0"></line>
+            <line y1="-1.5" x1="0" y2="-2.4" x2="0"></line>`
+            : ''
+          }
+        </g></g></g>
       </svg>
     `
+
     this.$minute_hand = this.$container.querySelector('#minute-hand')
     this.$hour_hand = this.$container.querySelector('#hour-hand')
     this.$hour_text = this.$container.querySelector('#hour-text')
     this.$minute_text = this.$container.querySelector('#minute-text')
+    this.$location_marker_rotate = this.$container.querySelector('#location-marker-rotate')
+    this.$location_marker_translate = this.$container.querySelector('#location-marker-translate')
+    this._getCurrentLocation()
   }
 
   reDraw() {
