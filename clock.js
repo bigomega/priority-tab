@@ -113,7 +113,10 @@ class Clock {
     }
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
-        // position = { coords: { latitude: 40.7128, longitude: -74.0060}}
+        // position = { coords: { latitude: 40.7128, longitude: -74.0060}} // NY
+        // position = { coords: { latitude: -33.8688, longitude: 151.2093}} // Sydney
+        // position = { coords: { latitude: 22.3193, longitude: 114.1694}} // HK
+        // position = { coords: { latitude: 52.5200, longitude: 13.4050}} // Berlin
         this.position = position
         cb(position)
       }, error => {
@@ -125,16 +128,17 @@ class Clock {
     }
   }
 
-  _updateSunPosition({latitude=0, longitude=0} = {}) {
-    if(!this.position?.coords){ return }
+  _updateSunPosition() {
     const now = new Date()
-    const num_hours = now.getHours() + now.getMinutes() / 60;
+    const num_hours = now.getUTCHours() + now.getUTCMinutes() / 60;
+    // const diff_from_timezone = (now.getTimezoneOffset()/60) * 360/24
+    // offset_in_deg(offset_in_hour(min/60) * 360/24)
 
-    const sun_pos = { latitude: getSolarDeclination(now), longitude: longitude + (360 / 24 * (12 - num_hours)) }
-    this.$sun_marker_rotate.dataset.coords = sun_pos
-    const { translate: sun_translate, rotate: sun_rotate } = this._getTransformForLatLong(sun_pos)
-    this.$sun_marker_rotate.style.transform = `rotate(${sun_rotate}deg)`
-    this.$sun_marker_translate.style.transform = `translate(0, ${sun_translate}px)`
+    const pos = { latitude: getSolarDeclination(now), longitude: 360 / 24 * (12 - num_hours) }
+    this.$sun_marker_rotate.dataset.coords = pos
+    const { translate, rotate } = this._getTransformForLatLong(pos)
+    this.$sun_marker_rotate.style.transform = `rotate(${rotate}deg)`
+    this.$sun_marker_translate.style.transform = `translate(0, ${translate}px)`
   }
 
   draw({now = new Date} = {}) {
@@ -144,6 +148,7 @@ class Clock {
     const seconds = now.getSeconds();
     const num_minutes = minutes + seconds / 60;
     const num_hours = hours + num_minutes / 60;
+    const location_marker_day_highlight = num_hours > 6.5 && num_hours < 17.5 ? 'filter: drop-shadow(0px 0px 0.2px #fff) drop-shadow(0px 0px 0.2px #fff);' : ''
     // <circle cx="0" cy="0" r="100" fill="#ccc"/>
     const globe_size = 170
     const ripple_color = '#f00'
@@ -195,9 +200,8 @@ class Clock {
       const { translate: gps_translate, rotate: gps_rotate } = this._getTransformForLatLong(coords)
       this.$location_marker_rotate.style.transform = `rotate(${gps_rotate}deg)`
       this.$location_marker_translate.style.transform = `translate(0, ${gps_translate}px)`
-
-      this._updateSunPosition(coords)
     })
+    this._updateSunPosition()
   }
 
   reDraw({now=new Date} = {}) {
@@ -223,10 +227,8 @@ class Clock {
       this.$hour_text = this.$container.querySelector('#hour-text')
     }
 
-    if(minutes%5 === 0) {
-      this._getCurrentLocation(({ coords }) => {
-        this._updateSunPosition(coords)
-      })
+    if(seconds === 0) {
+      this._updateSunPosition()
     }
   }
 }
