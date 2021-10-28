@@ -108,7 +108,7 @@ class Clock {
   }
 
   _getCurrentLocation(cb, err) {
-    if (this.position) {
+    if (this.position?.coords) {
       return cb(this.position)
     }
     if (navigator.geolocation) {
@@ -125,8 +125,20 @@ class Clock {
     }
   }
 
-  draw() {
+  _updateSunPosition({latitude=0, longitude=0} = {}) {
+    if(!this.position?.coords){ return }
     const now = new Date()
+    const num_hours = now.getHours() + now.getMinutes() / 60;
+
+    const sun_pos = { latitude: getSolarDeclination(now), longitude: longitude + (360 / 24 * (12 - num_hours)) }
+    this.$sun_marker_rotate.dataset.coords = sun_pos
+    const { translate: sun_translate, rotate: sun_rotate } = this._getTransformForLatLong(sun_pos)
+    this.$sun_marker_rotate.style.transform = `rotate(${sun_rotate}deg)`
+    this.$sun_marker_translate.style.transform = `translate(0, ${sun_translate}px)`
+  }
+
+  draw({now = new Date} = {}) {
+    // const now = new Date()
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
@@ -163,39 +175,36 @@ class Clock {
         </g></g>
         ${this._getHourHand({hours: num_hours})}
         <g>${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}</g>
-        ${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}
+        <g>${this._getHourText({ hours, text: ('0'+hours).slice(-2) })}</g>
       </svg>
     `
 
     this.$minute_hand = this.$container.querySelector('#minute-hand')
     this.$hour_hand = this.$container.querySelector('#hour-hand')
     this.$hour_text = this.$container.querySelector('#hour-text')
+    this.$hour_text.dataset.value = hours
     this.$minute_text = this.$container.querySelector('#minute-text')
     this.$location_marker_rotate = this.$container.querySelector('#location-marker-rotate')
     this.$location_marker_translate = this.$container.querySelector('#location-marker-translate')
     this.$sun_marker_rotate = this.$container.querySelector('#sun-marker-rotate')
     this.$sun_marker_translate = this.$container.querySelector('#sun-marker-translate')
 
-    this._getCurrentLocation(({ coords = {latitude:0,longitude:0} } = {}) => {
+    this._getCurrentLocation(({ coords }) => {
       // update current location
       this.$location_marker_rotate.dataset.coords = coords
       const { translate: gps_translate, rotate: gps_rotate } = this._getTransformForLatLong(coords)
       this.$location_marker_rotate.style.transform = `rotate(${gps_rotate}deg)`
       this.$location_marker_translate.style.transform = `translate(0, ${gps_translate}px)`
-      // update sun position
-      const sun_pos = { latitude: getSolarDeclination(now), longitude: coords.longitude + (360 / 24 * (12 - num_hours)) }
-      this.$sun_marker_rotate.dataset.coords = sun_pos
-      const { translate: sun_translate, rotate: sun_rotate } = this._getTransformForLatLong(sun_pos)
-      this.$sun_marker_rotate.style.transform = `rotate(${sun_rotate}deg)`
-      this.$sun_marker_translate.style.transform = `translate(0, ${sun_translate}px)`
+
+      this._updateSunPosition(coords)
     })
   }
 
-  reDraw() {
+  reDraw({now=new Date} = {}) {
     // if (!this.$minute_hand || this.$hour_hand) {
     //   return this.draw()
     // }
-    const now = new Date()
+    // const now = new Date()
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
@@ -208,11 +217,22 @@ class Clock {
     this.$hour_hand.style.transform = `rotate(${hour_theta}deg)`
     this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes, text: ('0' + minutes).slice(-2), seconds })
     this.$minute_text = this.$container.querySelector('#minute-text')
+
+    if(this.$hour_text.dataset.value !== hours) {
+      this.$hour_text.parentElement.innerHTML = this._getHourText({ hours, text: ('0' + hours).slice(-2) })
+      this.$hour_text = this.$container.querySelector('#hour-text')
+    }
+
+    if(minutes%5 === 0) {
+      this._getCurrentLocation(({ coords }) => {
+        this._updateSunPosition(coords)
+      })
+    }
   }
 }
 
 
-// const clock = new Clock({ hour_direction_switch: true, offset: 0, second_ripple: false, second_ticker: false })
+// const clock = new Clock({ hour_direction_switch: true, offset: 0, second_ticker: false })
 const clock = new Clock
 clock.draw()
 const redraw_timer = 1000
