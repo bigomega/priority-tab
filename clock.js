@@ -195,9 +195,20 @@ class Clock {
           <pattern id="clock-image" x="${-globe_size/2}" y="${-globe_size/2}" patternUnits="userSpaceOnUse" height="200" width="200">
             <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="./Azimuthal_equidistant_projection_SW-2.png"></image>
           </pattern>
+          <pattern id="clock-image-no-sea" x="${-globe_size/2}" y="${-globe_size/2}" patternUnits="userSpaceOnUse" height="200" width="200">
+            <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="./Azimuthal_equidistant_projection_SW-no-sea.png"></image>
+          </pattern>
         </defs>
+        <mask id="myMask">
+          <g style="transform:rotate(${0 && this._hToA(this.offset)}deg)">
+          <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
+          <rect class="bg-rotate-reverse" x="-100" y="-105" width="200" height="100" fill="white" style="filter: drop-shadow(0px 0px 2px white) drop-shadow(0px 0px 2px white) drop-shadow(0px 0px 2px white);"></rect>
+          </g>
+        </mask>
         <g id="clock-bg" class="bg-rotate">
-          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" mask="url(#myMask)"/>
+          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" style="filter:brightness(0)"></circle>
+          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image-no-sea)" style="filter:grayscale(1) contrast(0) brightness(0);/*filter:grayscale(1) contrast(1.7) brightness(1)*/"></circle>
+          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" mask="url(#myMask)"></circle>
         </g>
         <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"></circle>
         <g>${this._getHourMarkers(now)}</g>
