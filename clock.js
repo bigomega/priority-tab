@@ -20,11 +20,11 @@ class Clock {
       direction_switch = false,
       marker: {
         dot_size = 1,
-        dot_depth = 14,
+        dot_depth = 16,
         dot_split = 24,
-        text_depth = 18,
+        text_depth = 20,
         text_split = 4,
-        text_type = 12, // 24|12
+        is24h = false, // 24|12
       } = {},
     } = {},
     offset = 0,
@@ -45,7 +45,7 @@ class Clock {
         dot_split,
         text_depth,
         text_split,
-        text_type,
+        is24h,
       },
     }
     this.offset = offset
@@ -65,7 +65,7 @@ class Clock {
   _getHourMarkers(now = new Date) {
     const hours = now.getHours();
     const stroke_width = .5
-    const { dot_split, text_split, dot_depth, text_depth, dot_size, text_type } = this.hour.marker
+    const { dot_split, text_split, dot_depth, text_depth, dot_size, is24h } = this.hour.marker
     return `
       <g id="hour-markers" fill="#fff" stroke="#000">
         ${[...Array(24)].map((_, _h) => {
@@ -76,15 +76,15 @@ class Clock {
             text = `
               <g class="hour-marker-text ${isCurrent ? 'current-hour' : ''}" style="transform:rotate(${rotation}deg) translate(0, ${100-text_depth}px);">
                 <text style="transform:rotate(${-rotation}deg) ${isCurrent ? 'translate(-6px, 5px)' : 'translate(-4px, 8px)'};">
-                  ${text_type === 12
-                    ? this._nDigits(_h%12||12)+(_h>11?'<tspan>p</tspan>':'')
-                    : this._nDigits(_h)
+                  ${is24h
+                    ? this._nDigits(_h)
+                    : this._nDigits(_h%12||12)+(_h>11?'<tspan>p</tspan>':'')
                   }
                 </text>
               </g>
             `
           }
-          if (dot_depth !== 0 && !isCurrent && _h%(24/dot_split) === 0) {
+          if (!isCurrent && dot_split && _h%(24/dot_split) === 0) {
             dot = `<circle class="hour-marker-dot" cx="0" cy="0" r="${dot_size}" style="transform:rotate(${rotation}deg) translate(0, ${100-(dot_size*2)-dot_depth-2}px);" stroke-width="${stroke_width}"></circle>`
           }
           return `<g>${text}${dot}</g>`
@@ -179,10 +179,10 @@ class Clock {
   _updateMapBasedOnSun(now=new Date) {
     const offset_degree = this._hToA(this.offset)
     const sun_pos = this._getSunPosition(now)
-    this.$container.querySelectorAll('.bg-rotate').forEach($el => {
+    this.fixed_sun && this.$container.querySelectorAll('.globe-rotate').forEach($el => {
       $el.style.transform = `rotate(${sun_pos.longitude + offset_degree + 180}deg)`
     })
-    this.$container.querySelectorAll('.bg-rotate-reverse').forEach($el => {
+    this.$container.querySelectorAll('.shadow-rotate').forEach($el => {
       $el.style.transform = `rotate(${-sun_pos.longitude + 180}deg)`
     })
   }
@@ -210,10 +210,10 @@ class Clock {
         <mask id="myMask">
           <g style="transform:rotate(${0 && this._hToA(this.offset)}deg)">
           <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
-          <rect class="bg-rotate-reverse" x="-100" y="-105" width="200" height="100" fill="white" style="filter: drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px);"></rect>
+          <rect class="shadow-rotate" x="-100" y="-100" width="200" height="100" fill="white" style="filter: drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px);"></rect>
           </g>
         </mask>
-        <g id="clock-bg" class="bg-rotate">
+        <g id="clock-bg" class="globe-rotate">
           <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" style="filter: grayscale(0) brightness(0.4);"></circle>
           <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image-no-sea)" style="filter:grayscale(1) contrast(0) brightness(0);/*filter: grayscale(1) contrast(1.8) brightness(1);*/"></circle>
           <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" mask="url(#myMask)"></circle>
@@ -221,7 +221,7 @@ class Clock {
         <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"></circle>
         <g>${this._getHourMarkers(now)}</g>
         ${this._getMinuteHand({minutes})}
-        <g class="bg-rotate"><g id="location-marker-rotate"><g id="location-marker-translate"><g style="transform:scale(1.5);${location_marker_day_highlight}" fill="#f00" stroke="#f00" stroke-width=".2">
+        <g class="globe-rotate"><g id="location-marker-rotate"><g id="location-marker-translate"><g style="transform:scale(1.5);${location_marker_day_highlight}" fill="#f00" stroke="#f00" stroke-width=".2">
           ${
             this.location_marker ?
             `<circle cx="0" cy="0" r="1.5" fill="#fff0"></circle>
@@ -233,7 +233,7 @@ class Clock {
             : ''
           }
         </g></g></g></g>
-        <g class="bg-rotate"><g id="sun-marker-rotate"><g id="sun-marker-translate">
+        <g class="globe-rotate"><g id="sun-marker-rotate"><g id="sun-marker-translate">
           ${this.sun_marker ? '<circle id="sun" cx="0" cy="0" r="3"></circle>' : ''}
         </g></g></g>
         ${this._getHourHand({hours: num_hours})}
@@ -268,7 +268,7 @@ class Clock {
       this.$location_marker_translate.style.transform = `translate(0, ${gps_translate}px)`
     })
     this._updateSunPosition(now)
-    this.fixed_sun && this._updateMapBasedOnSun(now)
+    this._updateMapBasedOnSun(now)
   }
 
   reDraw(now=new Date) {
@@ -293,7 +293,7 @@ class Clock {
 
     if(seconds < 3) { // Just in case 0 was missed
       this._updateSunPosition(now)
-      this.fixed_sun && this._updateMapBasedOnSun(now)
+      this._updateMapBasedOnSun(now)
     }
   }
 }
