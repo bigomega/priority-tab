@@ -24,6 +24,7 @@ class Clock {
         dot_split = 24,
         text_depth = 18,
         text_split = 4,
+        text_type = 12, // 24|12
       } = {},
     } = {},
     offset = 0,
@@ -44,6 +45,7 @@ class Clock {
         dot_split,
         text_depth,
         text_split,
+        text_type,
       },
     }
     this.offset = offset
@@ -58,25 +60,31 @@ class Clock {
 
   _hToA = hours => 360 / 24 * hours
   _mToA = hours => 360 / 60 * hours
+  _nDigits = (v, n=2) => ('0000000'+v).slice(-n)
 
   _getHourMarkers(now = new Date) {
     const hours = now.getHours();
     const stroke_width = .5
-    const { dot_split, text_split, dot_depth, text_depth, dot_size } = this.hour.marker
+    const { dot_split, text_split, dot_depth, text_depth, dot_size, text_type } = this.hour.marker
     return `
       <g id="hour-markers" fill="#fff" stroke="#000">
-        ${[...Array(24)].map((_, h) => {
-          const isCurrent = h === hours
-          const rotation = this._getHourTheta(h)
+        ${[...Array(24)].map((_, _h) => {
+          const isCurrent = _h === hours
+          const rotation = this._getHourTheta(_h)
           let text = '', dot = ''
-          if (isCurrent || text_split && h%(24/text_split) === 0) {
+          if (isCurrent || text_split && _h%(24/text_split) === 0) {
             text = `
               <g class="hour-marker-text ${isCurrent ? 'current-hour' : ''}" style="transform:rotate(${rotation}deg) translate(0, ${100-text_depth}px);">
-                <text class="hour-marker-text" style="transform:rotate(${-rotation}deg) ${isCurrent ? 'translate(-6px, 5px)' : 'translate(-4px, 8px)'};">${('0'+h).slice(-2)}</text>
+                <text style="transform:rotate(${-rotation}deg) ${isCurrent ? 'translate(-6px, 5px)' : 'translate(-4px, 8px)'};">
+                  ${text_type === 12
+                    ? this._nDigits(_h%12||12)+(_h>11?'<tspan>p</tspan>':'')
+                    : this._nDigits(_h)
+                  }
+                </text>
               </g>
             `
           }
-          if (dot_depth !== 0 && h !== hours && h%(24/dot_split) === 0) {
+          if (dot_depth !== 0 && !isCurrent && _h%(24/dot_split) === 0) {
             dot = `<circle class="hour-marker-dot" cx="0" cy="0" r="${dot_size}" style="transform:rotate(${rotation}deg) translate(0, ${100-(dot_size*2)-dot_depth-2}px);" stroke-width="${stroke_width}"></circle>`
           }
           return `<g>${text}${dot}</g>`
@@ -202,12 +210,12 @@ class Clock {
         <mask id="myMask">
           <g style="transform:rotate(${0 && this._hToA(this.offset)}deg)">
           <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
-          <rect class="bg-rotate-reverse" x="-100" y="-105" width="200" height="100" fill="white" style="filter: drop-shadow(0px 0px 2px white) drop-shadow(0px 0px 2px white) drop-shadow(0px 0px 2px white);"></rect>
+          <rect class="bg-rotate-reverse" x="-100" y="-105" width="200" height="100" fill="white" style="filter: drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px);"></rect>
           </g>
         </mask>
         <g id="clock-bg" class="bg-rotate">
-          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" style="filter:brightness(0)"></circle>
-          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image-no-sea)" style="filter:grayscale(1) contrast(0) brightness(0);/*filter:grayscale(1) contrast(1.7) brightness(1)*/"></circle>
+          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" style="filter: grayscale(0) brightness(0.4);"></circle>
+          <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image-no-sea)" style="filter:grayscale(1) contrast(0) brightness(0);/*filter: grayscale(1) contrast(1.8) brightness(1);*/"></circle>
           <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" mask="url(#myMask)"></circle>
         </g>
         <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"></circle>
