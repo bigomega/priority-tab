@@ -39,6 +39,8 @@ class Clock {
       hand_color,
       hand_width,
       direction_switch,
+      $markers: null,
+      $hand: null,
       marker: {
         dot_size,
         dot_depth,
@@ -62,7 +64,7 @@ class Clock {
   _mToA = hours => 360 / 60 * hours
   _nDigits = (v, n=2) => ('0000000'+Math.floor(v)).slice(-n)
 
-  _getHourMarkers(now = new Date) {
+  _renderHourMarkers(now = new Date) {
     const hours = now.getHours();
     const stroke_width = .5
     const { dot_split, text_split, dot_depth, text_depth, dot_size, is24h } = this.hour.marker
@@ -93,7 +95,22 @@ class Clock {
     `
   }
 
-  _getMinuteHand({minutes=0} = {}) {
+  _renderHourHand({hours=0} = {}) {
+    const rotation = this._getHourTheta(hours)
+    const stroke_width = .5
+    const stroke_color = '#000'
+    const length = 60
+    const width = this.hour.hand_width
+    return `
+      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${stroke_color}" fill="${this.hour.hand_color}" stroke-width="${stroke_width}">
+        <circle cx="0" cy="0" r="${width}"></circle>
+        <polygon points="${-width},0 ${width},0 .4,${length} -.4,${length}"></polygon>
+        <rect x="${-width + stroke_width}" y="-.1" width="${(width-stroke_width)*2}" height="${stroke_width}" stroke="${this.hour.hand_color}" />
+      </g>
+    `
+  }
+
+  _renderMinuteHand({minutes=0} = {}) {
     const rotation = this._mToA(minutes)
     const width = 1
     const height = 100
@@ -103,7 +120,7 @@ class Clock {
     `
   }
 
-  _getMinuteText({ minutes = 0, seconds = 0 } = {}) {
+  _renderMinuteText({ minutes = 0, seconds = 0 } = {}) {
     const rotation = this._mToA(minutes)
     const tick = this.second_ticker ? (seconds % 2 ? '&nbsp;' : ':') : ''
     const text_offset = !!tick + 2
@@ -120,21 +137,6 @@ class Clock {
   _getHourTheta(hours = 0) {
     const dir = this.hour.direction_switch ? -1 : 1
     return this._hToA(hours + this.offset * dir) * dir
-  }
-
-  _getHourHand({hours=0} = {}) {
-    const rotation = this._getHourTheta(hours)
-    const stroke_width = .5
-    const stroke_color = '#000'
-    const length = 60
-    const width = this.hour.hand_width
-    return `
-      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${stroke_color}" fill="${this.hour.hand_color}" stroke-width="${stroke_width}">
-        <circle cx="0" cy="0" r="${width}"></circle>
-        <polygon points="${-width},0 ${width},0 .4,${length} -.4,${length}"></polygon>
-        <rect x="${-width + stroke_width}" y="-.1" width="${(width-stroke_width)*2}" height="${stroke_width}" stroke="${this.hour.hand_color}" />
-      </g>
-    `
   }
 
   _getTransformForLatLong({ latitude = 0, longitude = 0 } ={}){
@@ -224,8 +226,8 @@ class Clock {
           <circle cx="0" cy="0" r="${globe_size / 2}" fill="url(#clock-image)" mask="url(#myMask)"></circle>
         </g>
         <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" class="${this.second_ripple ? 'active' : ''}" style="stroke:${ripple_color}"></circle>
-        <g>${this._getHourMarkers(now)}</g>
-        ${this._getMinuteHand({minutes})}
+        <g>${this._renderHourMarkers(now)}</g>
+        ${this._renderMinuteHand({minutes})}
         <g class="globe-rotate"><g id="location-marker-rotate"><g id="location-marker-translate"><g style="transform:scale(1.5);${location_marker_day_highlight}" fill="#f00" stroke="#f00" stroke-width=".2">
           ${
             this.location_marker ?
@@ -241,8 +243,8 @@ class Clock {
         <g class="globe-rotate"><g id="sun-marker-rotate"><g id="sun-marker-translate">
           ${this.sun_marker ? '<circle id="sun" cx="0" cy="0" r="3"></circle>' : ''}
         </g></g></g>
-        ${this._getHourHand({hours: num_hours})}
-        <g>${this._getMinuteText({ minutes, seconds })}</g>
+        ${this._renderHourHand({hours: num_hours})}
+        <g>${this._renderMinuteText({ minutes, seconds })}</g>
       </svg>
       <div style="
         position: absolute;
@@ -291,9 +293,9 @@ class Clock {
     this.$minute_hand.style.transform = `rotate(${minute_theta+180}deg)`
     this.hour.$hand.style.transform = `rotate(${hour_theta}deg)`
 
-    this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes, seconds })
+    this.$minute_text.parentElement.innerHTML = this._renderMinuteText({ minutes, seconds })
     this.$minute_text = this.$container.querySelector('#minute-text')
-    this.hour.$markers.parentElement.innerHTML = this._getHourMarkers(now)
+    this.hour.$markers.parentElement.innerHTML = this._renderHourMarkers(now)
     this.hour.$markers = this.$container.querySelector('#hour-markers')
 
     if(seconds < 3) { // Just in case 0 was missed
