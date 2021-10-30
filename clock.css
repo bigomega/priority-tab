@@ -43,6 +43,13 @@ body {
   /* font-weight: 200; */
   text-shadow: 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
 }
+#clock svg #minute-text text {
+  transform-box: fill-box;
+  transform-origin: 3px 3px;
+}
+#clock svg #minute-text text.tick {
+  transform-origin: 4.5px 3px;
+}
 
 #sun {
   fill: yellow;

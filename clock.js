@@ -60,7 +60,7 @@ class Clock {
 
   _hToA = hours => 360 / 24 * hours
   _mToA = hours => 360 / 60 * hours
-  _nDigits = (v, n=2) => ('0000000'+v).slice(-n)
+  _nDigits = (v, n=2) => ('0000000'+Math.floor(v)).slice(-n)
 
   _getHourMarkers(now = new Date) {
     const hours = now.getHours();
@@ -103,13 +103,18 @@ class Clock {
     `
   }
 
-  _getMinuteText({ minutes = 0, text = '00', seconds = 0 } = {}) {
+  _getMinuteText({ minutes = 0, seconds = 0 } = {}) {
     const rotation = this._mToA(minutes)
     const tick = this.second_ticker ? (seconds % 2 ? '&nbsp;' : ':') : ''
+    const text_offset = !!tick + 2
     const color = '#fff'
-    const depth = 94
+    const depth = 96
     const size = .5
-    return `<g id="minute-text" style="transform:rotate(${rotation + 180}deg) translate(-6px,${depth}px);font-size:${size}em;" fill="${color}"><text x="0" y="0" style="transform:rotate(${-rotation + 180}deg);transform-origin:6px 0px;">${tick}${text}</text></g>`
+    return `
+      <g id="minute-text" style="transform:rotate(${rotation + text_offset + 180}deg) translate(0px,${depth}px);font-size:${size}em;" fill="${color}">
+        <text class="${tick ? 'tick' : ''}" x="0" y="0" style="transform:rotate(${- rotation - text_offset - 180}deg);">${tick}${this._nDigits(minutes)}</text>
+      </g>
+    `
   }
 
   _getHourTheta(hours = 0) {
@@ -237,7 +242,7 @@ class Clock {
           ${this.sun_marker ? '<circle id="sun" cx="0" cy="0" r="3"></circle>' : ''}
         </g></g></g>
         ${this._getHourHand({hours: num_hours})}
-        <g>${this._getMinuteText({ minutes, text: ('0'+minutes).slice(-2), seconds })}</g>
+        <g>${this._getMinuteText({ minutes, seconds })}</g>
       </svg>
       <div style="
         position: absolute;
@@ -260,7 +265,7 @@ class Clock {
     this.$sun_marker_rotate = this.$container.querySelector('#sun-marker-rotate')
     this.$sun_marker_translate = this.$container.querySelector('#sun-marker-translate')
 
-    this._getCurrentLocation(({ coords }) => {
+    this.location_marker && this._getCurrentLocation(({ coords }) => {
       // update current location
       this.$location_marker_rotate.dataset.coords = coords
       const { translate: gps_translate, rotate: gps_rotate } = this._getTransformForLatLong(coords)
@@ -286,7 +291,7 @@ class Clock {
     this.$minute_hand.style.transform = `rotate(${minute_theta+180}deg)`
     this.hour.$hand.style.transform = `rotate(${hour_theta}deg)`
 
-    this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes, text: ('0' + minutes).slice(-2), seconds })
+    this.$minute_text.parentElement.innerHTML = this._getMinuteText({ minutes, seconds })
     this.$minute_text = this.$container.querySelector('#minute-text')
     this.hour.$markers.parentElement.innerHTML = this._getHourMarkers(now)
     this.hour.$markers = this.$container.querySelector('#hour-markers')
@@ -303,11 +308,13 @@ const clock = new Clock({
   hour: {
     direction_switch: true,
     hand_width: 1,
-    hand_color: '#da00fb',
-    marker: { text_split: 0 }
+    hand_color: 'yellow',
+    marker: { text_split: 4, dot_split:12, is24h:true }
   },
+  // second_ripple: true,
+  location_marker: false,
   offset: 0,
-  second_ticker: false,
+  // second_ticker: false,
 })
 // const clock = new Clock
 clock.draw()
