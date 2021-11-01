@@ -46,8 +46,8 @@ class Clock {
   }
 
   configureHour({
-    show_text = true,
     direction_switch = false,
+    is24h = true,
     hand: {
       color = '#fff',
       depth = 60,
@@ -57,29 +57,24 @@ class Clock {
       dot_size = 1,
       dot_depth = 16,
       dot_split = 24,
+      dot_skip_current = true,
       text_depth = 20,
       text_split = 4,
-      is24h = false,
-      show_minutes = true,
+    } = {},
+    now: {
+      show = true,
+      minutes = true,
       seconds_ticker = true,
-      minute_progress = true,
+      minute_progress = false,
+      minute_progress_split = 4,
     } = {},
   } = {}) {
     this.hour = {
-      show_text,
       direction_switch,
+      is24h,
       hand: { depth, color, width },
-      marker: {
-        dot_size,
-        dot_depth,
-        dot_split,
-        text_depth,
-        text_split,
-        is24h,
-        show_minutes,
-        seconds_ticker,
-        minute_progress,
-      },
+      marker: { dot_size, dot_depth, dot_split, dot_skip_current, text_depth, text_split },
+      now: { show, minutes, seconds_ticker, minute_progress, minute_progress_split },
       $markers: null,
       $hand: null,
     }
@@ -107,53 +102,54 @@ class Clock {
     const seconds = now.getSeconds()
     const stroke_width = .5
     const progress_height = 2
-    const progress_width = 30
+    const progress_width = 25
     const progress_color = '#fff'
     const progress_offset = 2
     const progress_stroke_width = .5
-    const { dot_split, text_split, dot_depth, text_depth, dot_size, is24h, show_minutes, seconds_ticker, minute_progress } = this.hour.marker
+    const { dot_split, text_split, dot_depth, text_depth, dot_size, dot_skip_current } = this.hour.marker
+    const current = this.hour.now
     return `
       <g id="hour-markers" fill="#fff" stroke="#000">
         ${[...Array(24)].map((_, _h) => {
-          const isCurrent = _h === hours
-          if (isCurrent && !this.hour.show_text) {
-            return ''
-          }
+          const isCurrent = _h === hours && current.show
           const rotation = this._getHourTheta(_h)
-          let hour_text = is24h ? _h : (_h%12 || 12)
+          let hour_text = this.hour.is24h ? _h : (_h%12 || 12)
+          let text = '', dot = '', progress = ''
           // if (!isCurrent) { hour_text = this._nDigits(hour_text) }
-          if (isCurrent && seconds_ticker) {
+          if (isCurrent && current.seconds_ticker) {
             hour_text += `<tspan class="tick ${seconds%2 ?'on':''}">:</tspan>`
           }
-          if (isCurrent && show_minutes) {
+          if (isCurrent && current.minutes) {
             hour_text += `<tspan class="minutes">${this._nDigits(minutes)}</tspan>`
           }
-          if (!is24h && _h > 11) {
+          if (!this.hour.is24h && _h > 11) {
             hour_text += '<tspan class="pm">p</tspan>'
           }
-          let text = '', dot = '', progress = ''
-          if (isCurrent && minute_progress) {
+          if (isCurrent && current.minute_progress) {
             progress = `
               <g>
                 <rect width="${progress_width}" height="${progress_height}" style="fill:#0003;stroke-width:${progress_stroke_width}px;stroke:#000;" x="0" y="${progress_offset}"></rect>
                 <rect width="${(minutes/60*progress_width)-progress_stroke_width}" height="${progress_height-progress_stroke_width}" style="fill:${progress_color};stroke-width:0px;stroke:#000;" x="${progress_stroke_width/2}" y="${progress_offset+progress_stroke_width/2}"></rect>
-                <line x1="${progress_width/2}" y1="${progress_offset}" x2="${progress_width/2}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
-                <line x1="${progress_width/4}" y1="${progress_offset}" x2="${progress_width/4}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
-                <line x1="${progress_width*3/4}" y1="${progress_offset}" x2="${progress_width*3/4}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
+                ${
+                  [...Array(current.minute_progress_split)].map((_,i) => {
+                    const x_offset = progress_width * i / current.minute_progress_split
+                    return `<line x1="${x_offset}" y1="${progress_offset}" x2="${x_offset}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>`
+                  }).join('')
+                }
               </g>
             `
           }
           if (isCurrent || text_split && _h%(24/text_split) === 0) {
             text = `
               <g class="hour-marker-text ${isCurrent ? 'current-hour' : ''}" style="transform:rotate(${rotation}deg) translate(0, ${100-text_depth}px);">
-                <g style="transform:rotate(${-rotation}deg) ${isCurrent ? `translate(${show_minutes ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'};">
+                <g style="transform:rotate(${-rotation}deg) ${isCurrent ? `translate(${current.minutes||current.minute_progress ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'};">
                   ${progress}
-                  <text>${hour_text}</text>
+                  <text style="transform:translate(${current.minute_progress&&!current.minutes?7:0}px,0px)">${hour_text}</text>
                 </g>
               </g>
             `
           }
-          if (!isCurrent && dot_split && _h%(24/dot_split) === 0) {
+          if ((!isCurrent || !dot_skip_current) && dot_split && _h%(24/dot_split) === 0) {
             dot = `<circle class="hour-marker-dot" cx="0" cy="0" r="${dot_size}" style="transform:rotate(${rotation}deg) translate(0, ${100-(dot_size*2)-dot_depth-2}px);" stroke-width="${stroke_width}"></circle>`
           }
           return `<g>${dot}${text}</g>`
@@ -238,6 +234,10 @@ class Clock {
     } else {
       err({ msg: 'Object missing: navigator.geolocation'})
     }
+  }
+
+  _getMoonPosition(now=new Date) {
+    // 🌕🌖🌗🌘🌑🌒🌓🌔🌕
   }
 
   _getSunPosition(now=new Date) {
@@ -368,7 +368,7 @@ class Clock {
       this.minute.$text = this.$container.querySelector('#minute-text')
     }
 
-    if (this.hour.marker.seconds_ticker || seconds < 3) {
+    if (this.hour.now.seconds_ticker || seconds < 3) {
       this.hour.$markers.parentElement.innerHTML = this._renderHourMarkers(now)
       this.hour.$markers = this.$container.querySelector('#hour-markers')
     }
@@ -404,19 +404,25 @@ clock = new Clock({
     direction_switch: true,
     hand: {
       // width: 1,
-      // depth: 25,
+      depth: 70,
     },
     // hand.color: 'yellow',
+    is24h: true,
     marker: {
-      text_split: 0, dot_split: 12, dot_size: 1.5, dot_depth: 12,
-      is24h: true,
-      // show_minutes: false,
-      // seconds_ticker: false,
+      text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 25,
+      dot_skip_current: false,
+    },
+    now: {
+      // show: false,
+      minutes: false,
+      seconds_ticker: false,
+      // minute_progress: true,
+      minute_progress_split: 4*3,
     }
   },
-  // second_ripple: true,
+  second_ripple: true,
   second_ripple_color: '#f0f',
   // location_marker: false,
   offset: 0,
   // minute: { show_hand: true },
-}).start()
+}).draw().start()
