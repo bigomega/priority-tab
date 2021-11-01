@@ -45,9 +45,12 @@ class Clock {
 
   configureHour({
     show_text = true,
-    hand_color = '#fff',
-    hand_width = 3.5,
     direction_switch = false,
+    hand: {
+      color = '#fff',
+      depth = 60,
+      width = 2,
+    } = {},
     marker: {
       dot_size = 1,
       dot_depth = 16,
@@ -57,15 +60,13 @@ class Clock {
       is24h = false,
       show_minutes = true,
       seconds_ticker = true,
+      minute_progress = true,
     } = {},
   } = {}) {
     this.hour = {
       show_text,
-      hand_color,
-      hand_width,
       direction_switch,
-      $markers: null,
-      $hand: null,
+      hand: { depth, color, width },
       marker: {
         dot_size,
         dot_depth,
@@ -75,7 +76,10 @@ class Clock {
         is24h,
         show_minutes,
         seconds_ticker,
+        minute_progress,
       },
+      $markers: null,
+      $hand: null,
     }
   }
 
@@ -88,7 +92,12 @@ class Clock {
     const minutes = now.getMinutes()
     const seconds = now.getSeconds()
     const stroke_width = .5
-    const { dot_split, text_split, dot_depth, text_depth, dot_size, is24h, show_minutes, seconds_ticker } = this.hour.marker
+    const progress_height = 2
+    const progress_width = 30
+    const progress_color = '#fff'
+    const progress_offset = 2
+    const progress_stroke_width = .5
+    const { dot_split, text_split, dot_depth, text_depth, dot_size, is24h, show_minutes, seconds_ticker, minute_progress } = this.hour.marker
     return `
       <g id="hour-markers" fill="#fff" stroke="#000">
         ${[...Array(24)].map((_, _h) => {
@@ -97,7 +106,8 @@ class Clock {
             return ''
           }
           const rotation = this._getHourTheta(_h)
-          let hour_text = is24h ? this._nDigits(_h) : this._nDigits(_h%12 || 12)
+          let hour_text = is24h ? _h : (_h%12 || 12)
+          // if (!isCurrent) { hour_text = this._nDigits(hour_text) }
           if (isCurrent && seconds_ticker) {
             hour_text += `<tspan class="tick ${seconds%2 ?'on':''}">:</tspan>`
           }
@@ -107,18 +117,32 @@ class Clock {
           if (!is24h && _h > 11) {
             hour_text += '<tspan class="pm">p</tspan>'
           }
-          let text = '', dot = ''
+          let text = '', dot = '', progress = ''
+          if (isCurrent && minute_progress) {
+            progress = `
+              <g>
+                <rect width="${progress_width}" height="${progress_height}" style="fill:#0003;stroke-width:${progress_stroke_width}px;stroke:#000;" x="0" y="${progress_offset}"></rect>
+                <rect width="${(minutes/60*progress_width)-progress_stroke_width}" height="${progress_height-progress_stroke_width}" style="fill:${progress_color};stroke-width:0px;stroke:#000;" x="${progress_stroke_width/2}" y="${progress_offset+progress_stroke_width/2}"></rect>
+                <line x1="${progress_width/2}" y1="${progress_offset}" x2="${progress_width/2}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
+                <line x1="${progress_width/4}" y1="${progress_offset}" x2="${progress_width/4}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
+                <line x1="${progress_width*3/4}" y1="${progress_offset}" x2="${progress_width*3/4}" y2="${progress_height+progress_offset}" style="stroke-width:${progress_stroke_width};stroke: #0009;"></line>
+              </g>
+            `
+          }
           if (isCurrent || text_split && _h%(24/text_split) === 0) {
             text = `
               <g class="hour-marker-text ${isCurrent ? 'current-hour' : ''}" style="transform:rotate(${rotation}deg) translate(0, ${100-text_depth}px);">
-                <text style="transform:rotate(${-rotation}deg) ${isCurrent ? `translate(${show_minutes ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'};">${hour_text}</text>
+                <g style="transform:rotate(${-rotation}deg) ${isCurrent ? `translate(${show_minutes ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'};">
+                  ${progress}
+                  <text>${hour_text}</text>
+                </g>
               </g>
             `
           }
           if (!isCurrent && dot_split && _h%(24/dot_split) === 0) {
             dot = `<circle class="hour-marker-dot" cx="0" cy="0" r="${dot_size}" style="transform:rotate(${rotation}deg) translate(0, ${100-(dot_size*2)-dot_depth-2}px);" stroke-width="${stroke_width}"></circle>`
           }
-          return `<g>${text}${dot}</g>`
+          return `<g>${dot}${text}</g>`
         }).join('')}
       </g>
     `
@@ -128,13 +152,12 @@ class Clock {
     const rotation = this._getHourTheta(hours)
     const stroke_width = .5
     const stroke_color = '#000'
-    const length = 60
-    const width = this.hour.hand_width
+    const { depth, width, color } = this.hour.hand
     return `
-      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${stroke_color}" fill="${this.hour.hand_color}" stroke-width="${stroke_width}">
+      <g id="hour-hand" style="transform:rotate(${rotation}deg);" stroke="${stroke_color}" fill="${color}" stroke-width="${stroke_width}">
         <circle cx="0" cy="0" r="${width}"></circle>
-        <polygon points="${-width},0 ${width},0 .4,${length} -.4,${length}"></polygon>
-        <rect x="${-width + stroke_width}" y="-.1" width="${(width-stroke_width)*2}" height="${stroke_width}" stroke="${this.hour.hand_color}" />
+        <polygon points="${-width},0 ${width},0 .4,${depth} -.4,${depth}"></polygon>
+        <rect x="${-width + stroke_width}" y="-.1" width="${(width-stroke_width)*2}" height="${stroke_width}" stroke="${color}" />
       </g>
     `
   }
@@ -329,13 +352,13 @@ class Clock {
       this.minute.$text = this.$container.querySelector('#minute-text')
     }
 
-    this.hour.$hand.style.transform = `rotate(${hour_theta}deg)`
     if (this.hour.marker.seconds_ticker || seconds < 3) {
       this.hour.$markers.parentElement.innerHTML = this._renderHourMarkers(now)
       this.hour.$markers = this.$container.querySelector('#hour-markers')
     }
 
     if(seconds < 3) { // Just in case 0 was missed
+      this.hour.$hand.style.transform = `rotate(${hour_theta}deg)`
       this._updateSunPosition(now)
       this._updateMapBasedOnSun(now)
     }
