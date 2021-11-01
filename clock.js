@@ -41,6 +41,8 @@ class Clock {
     this.fixed_sun = fixed_sun
     this.$container = $container
     this.position = null
+
+    return this._getPublicObject()
   }
 
   configureHour({
@@ -81,6 +83,18 @@ class Clock {
       $markers: null,
       $hand: null,
     }
+  }
+
+  _publicProperties = ['start', 'draw', 'stop', 'reDraw']
+  _getPublicObject() {
+    const public_object = this._publicProperties.reduce((mem, prop) => {
+      mem[prop] = this[prop]
+      if(mem[prop] && typeof mem[prop] === 'function') {
+        mem[prop] = this[prop].bind(this)
+      }
+      return mem
+    }, {})
+    return public_object
   }
 
   _hToA = hours => 360 / 24 * hours
@@ -333,6 +347,8 @@ class Clock {
     })
     this._updateSunPosition(now)
     this._updateMapBasedOnSun(now)
+
+    return this._getPublicObject()
   }
 
   reDraw(now=new Date) {
@@ -362,29 +378,45 @@ class Clock {
       this._updateSunPosition(now)
       this._updateMapBasedOnSun(now)
     }
+    return this._getPublicObject()
+  }
+
+  start() {
+    this.draw()
+    this._tick_pid = setInterval(_ => this.reDraw(), 1000)
+    return this._getPublicObject()
+  }
+
+  stop() {
+    this._tick_pid && clearInterval(this._tick_pid)
+    return this._getPublicObject()
   }
 }
 
 
-const clock = new Clock({
+let clock
+clock = new Clock
+clock.start()
+
+clock.stop()
+clock = new Clock({
   hour: {
     direction_switch: true,
-    hand_width: 1,
-    hand_color: 'yellow',
+    hand: {
+      // width: 1,
+      // depth: 25,
+    },
+    // hand.color: 'yellow',
     marker: {
-      text_split: 4, dot_split: 24,
+      text_split: 0, dot_split: 12, dot_size: 1.5, dot_depth: 12,
       is24h: true,
       // show_minutes: false,
-      seconds_ticker: false,
+      // seconds_ticker: false,
     }
   },
   // second_ripple: true,
   second_ripple_color: '#f0f',
   // location_marker: false,
   offset: 0,
-  // minute: { seconds_ticker: false },
-})
-// const clock = new Clock
-clock.draw()
-const redraw_timer = 1000
-redraw_timer && setInterval(_ => clock.reDraw(), redraw_timer)
+  // minute: { show_hand: true },
+}).start()
