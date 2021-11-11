@@ -1,5 +1,5 @@
 body {
-  background-image: url('https://source.unsplash.com/1700x900/?clouds'),url('./forest.jpg');
+  background-image: url('https://source.unsplash.com/1700x900/?clouds'),url('../images/forest.jpg');
   background-size: cover;
 }
 #clock {
@@ -74,7 +74,7 @@ body {
 #second-ripple.active {
   display: block;
   /* opacity: 0.3; */
-  stroke: #f00;
+  /* stroke: #f00; */
   /* filter: blur(0); */
   stroke-width: .2;
   animation: ripple 1s linear infinite;

@@ -82,6 +82,7 @@ class Clock {
 
   _publicProperties = ['start', 'draw', 'stop', 'reDraw']
   _getPublicObject() {
+    // return this
     const public_object = this._publicProperties.reduce((mem, prop) => {
       mem[prop] = this[prop]
       if(mem[prop] && typeof mem[prop] === 'function') {
@@ -279,10 +280,10 @@ class Clock {
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">
         <defs>
           <pattern id="clock-image" x="${-globe_size/2}" y="${-globe_size/2}" patternUnits="userSpaceOnUse" height="200" width="200">
-            <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="./Azimuthal_equidistant_projection_SW-2.png"></image>
+            <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="${document.getElementById('img1').src}"></image>
           </pattern>
           <pattern id="clock-image-no-sea" x="${-globe_size/2}" y="${-globe_size/2}" patternUnits="userSpaceOnUse" height="200" width="200">
-            <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="./Azimuthal_equidistant_projection_SW-no-sea.png"></image>
+            <image x="0" y="0" height="${globe_size}" width="${globe_size}" xlink:href="${document.getElementById('img2').src}"></image>
           </pattern>
         </defs>
         <mask id="myMask">
@@ -409,7 +410,7 @@ clock = new Clock({
     // hand.color: 'yellow',
     is24h: true,
     marker: {
-      text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 25,
+      text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 24.5,
       dot_skip_current: false,
     },
     now: {

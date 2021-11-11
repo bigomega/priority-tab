@@ -8,9 +8,14 @@
     "newtab": "index.html"
   },
   "permissions": [
-    "storage",
-    "source.unsplash.com",
-    "https://calendar.google.com"
+    "storage"
+  ],
+  "optional_permissions": [
+    "geolocation"
+  ],
+  "host_permissions": [
+    "*://source.unsplash.com/*",
+    "*://calendar.google.com/*"
   ],
   "icons": {
   }
