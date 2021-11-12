@@ -1,19 +1,21 @@
 import Cn from 'classnames'
 import * as _utils from './_utils'
 import HourMarkers from './hour-markers'
+import HourHand from './hour-hand'
+import Sun from './sun'
+
 import * as styles from './index.module.scss'
 
 import IMG_Azimuthal from "/images/Azimuthal_equidistant_projection_SW-2.png"
 import IMG_Azimuthal_land from "/images/Azimuthal_equidistant_projection_SW-no-sea.png"
 
 function Clock({
-  hour = {},
+  hour = { offset: undefined },
   minute: {
     show_hand = false,
     show_text = false,
     seconds_ticker = true,
   } = {},
-  offset = 0,
   second_ripple = false,
   second_ripple_color = '#f00',
   location_marker = true,
@@ -48,7 +50,7 @@ function Clock({
         </pattern>
       </defs>
       <mask id="shadowMask">
-        <g style={{ transform: `rotate(${0 && _utils.hToA(offset)}deg)`}}>
+        <g style={{ transform: `rotate(${0 && _utils.hToA(hour.offset)}deg)`}}>
         <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
         <rect className="shadow-rotate" x="-100" y="-100" width="200" height="100" fill="white" style={{filter: `drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px)`}}></rect>
         </g>
@@ -65,11 +67,9 @@ function Clock({
         )}
         style={{stroke:second_ripple_color}}
       ></circle>
-      <HourMarkers _now={now} offset={offset} {...hour}/>
+      <HourMarkers _now={now} {...hour}/>
       {/* ${this.props._renderMinuteHand({ minutes })} */}
-      <g className="globe-rotate"><g id="sun-marker-rotate"><g id="sun-marker-translate">
-        {sun_marker && <circle className={styles.sun} cx="0" cy="0" r="3"></circle>}
-      </g></g></g>
+      {sun_marker && <Sun />}
       <g className="globe-rotate">
         <g id="location-marker-rotate">
           <g id="location-marker-translate">
@@ -88,7 +88,7 @@ function Clock({
           </g>
         </g>
       </g>
-      {/* ${this._renderHourHand({ hours: num_hours })} */}
+      <HourHand _now={now} {...hour} />
       {/* <g>${this._renderMinuteText({ minutes, seconds })}</g> */}
     </svg>
   )

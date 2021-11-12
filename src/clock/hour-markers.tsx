@@ -7,41 +7,47 @@ function isPartOfSplit(value:number, split_by:number, total = 24) {
   return split_by && value % (24 / split_by) === 0
 }
 
+function getDotConfig({ size = 1, depth = 16, split = 24, skip_current = true }) {
+  return { size, depth, split, skip_current }
+}
+
+function getTextConfig({ depth = 20, split = 4 }) {
+  return { depth, split }
+}
+
 function HourMarkers({
   direction_switch = false,
-  is24h = true,
+  offset = 0,
   marker: {
-    dot_size = 1,
-    dot_depth = 16,
-    dot_split = 24,
-    dot_skip_current = true,
-    text_depth = 20,
-    text_split = 4,
-  } = {},
-  now: {
-    show = true,
-    minutes = true,
-    seconds_ticker = true,
-    minute_progress = false,
-    minute_progress_split = 4,
+    is24h = true,
+    dot = {},
+    text = {},
+    now: {
+      display = true,
+      minutes = true,
+      seconds_ticker = true,
+      minute_progress = false,
+      minute_progress_split = 4,
+    } = {},
   } = {},
   _now,
-  offset = 0,
 }) {
-
   const stroke_width = .5
   const progress_height = 2
   const progress_width = 25
   const progress_color = '#fff'
   const progress_offset = 2
   const progress_stroke_width = .5
+
+  const _dot = getDotConfig(dot)
+  const _text = getTextConfig(text)
   const current = {
-    show, minutes, seconds_ticker, minute_progress, minute_progress_split,
+    display, minutes, seconds_ticker, minute_progress, minute_progress_split,
   }
   return (
     <g id="hour-markers" fill="#fff" stroke="#000">
       {[...Array(24)].map((_, _h) => {
-        const isCurrent = _h === _now.hours && current.show
+        const isCurrent = _h === _now.hours && current.display
         const rotation = _utils.getHourTheta({ hours: _h, direction_switch, offset })
         let hour_text = is24h ? _h : (_h % 12 || 12)
         let hour_text_tick: React.ReactElement,
@@ -98,11 +104,11 @@ function HourMarkers({
           )
         }
 
-        // if Current. OR. based on text_split
-        if (isCurrent || isPartOfSplit(_h, text_split)) {
+        // if Current. OR. based on text split
+        if (isCurrent || isPartOfSplit(_h, _text.split)) {
           const translate = isCurrent ? `translate(${current.minutes || current.minute_progress ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'
           text = (
-            <g className={Cn(styles.hourMarkerText, {[styles.currentHour]: isCurrent})} style={{transform:`rotate(${rotation}deg) translate(0, ${100 - text_depth}px)`}}>
+            <g className={Cn(styles.hourMarkerText, {[styles.currentHour]: isCurrent})} style={{transform:`rotate(${rotation}deg) translate(0, ${100 - _text.depth}px)`}}>
               <g style={{ transform: `rotate(${-rotation}deg) ${translate}`}}>
                 {progress}
                 <text style={{ transform:`translate(${current.minute_progress && !current.minutes ? 7 : 0}px,0px)`}}>
@@ -113,12 +119,12 @@ function HourMarkers({
           )
         }
 
-        // if not current and skip-it AND based on dot_split
-        if (!(dot_skip_current && isCurrent) && isPartOfSplit(_h, dot_split)) {
-          const translate = `translate(0, ${100 - (dot_size * 2) - dot_depth - 2}px)`
+        // if not current and skip-it AND based on dot split
+        if (!(_dot.skip_current && isCurrent) && isPartOfSplit(_h, _dot.split)) {
+          const translate = `translate(0, ${100 - (_dot.size * 2) - _dot.depth - 2}px)`
           dot = <circle
             className={styles.hourMarkerDot}
-            cx="0" cy="0" r={dot_size}
+            cx="0" cy="0" r={_dot.size}
             style={{transform:`rotate(${rotation}deg) ${translate}`}}
             strokeWidth={stroke_width}
           ></circle>

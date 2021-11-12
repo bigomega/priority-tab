@@ -13,14 +13,14 @@ const clock_config = {
     marker: {
       text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 24.5,
       // dot_skip_current: false,
+      now: {
+        // show: false,
+        minutes: false,
+        seconds_ticker: false,
+        // minute_progress: true,
+        minute_progress_split: 4 * 3,
+      }
     },
-    now: {
-      // show: false,
-      minutes: false,
-      seconds_ticker: false,
-      // minute_progress: true,
-      minute_progress_split: 4 * 3,
-    }
   },
   second_ripple: true,
   second_ripple_color: '#f0f',
