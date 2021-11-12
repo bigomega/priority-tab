@@ -1,5 +1,12 @@
-import * as _utils from './_utils'
 import * as React from 'react'
+import Cn from 'classnames'
+import * as _utils from './_utils'
+import * as styles from './hour-markers.module.scss'
+
+function isPartOfSplit(value:number, split_by:number, total = 24) {
+  return split_by && value % (24 / split_by) === 0
+}
+
 function HourMarkers({
   direction_switch = false,
   is24h = true,
@@ -47,13 +54,13 @@ function HourMarkers({
 
         // if (!isCurrent) { hour_text = this._nDigits(hour_text) }
         if (isCurrent && current.seconds_ticker) {
-          hour_text_tick = <tspan className={`tick ${_now.seconds % 2 ? 'on' : ''}`}>:</tspan>
+          hour_text_tick = <tspan className={Cn(styles.tick, {[styles.on]: _now.seconds % 2})}>:</tspan>
         }
         if (isCurrent && current.minutes) {
-          hour_text_minutes = <tspan className="minutes">${_utils.nDigits(_now.minutes)}</tspan>
+          hour_text_minutes = <tspan className={styles.minutes}>{_utils.nDigits(_now.minutes)}</tspan>
         }
         if (!is24h && _h > 11) {
-          hour_text_ampm = <tspan className="pm">p</tspan>
+          hour_text_ampm = <tspan className={styles.pm}>p</tspan>
         }
 
         if (isCurrent && current.minute_progress) {
@@ -91,10 +98,11 @@ function HourMarkers({
           )
         }
 
-        if (isCurrent || text_split && _h % (24 / text_split) === 0) {
+        // if Current. OR. based on text_split
+        if (isCurrent || isPartOfSplit(_h, text_split)) {
           const translate = isCurrent ? `translate(${current.minutes || current.minute_progress ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'
           text = (
-            <g className={`hour-marker-text ${isCurrent ? 'current-hour' : ''}`} style={{transform:`rotate(${rotation}deg) translate(0, ${100 - text_depth}px)`}}>
+            <g className={Cn(styles.hourMarkerText, {[styles.currentHour]: isCurrent})} style={{transform:`rotate(${rotation}deg) translate(0, ${100 - text_depth}px)`}}>
               <g style={{ transform: `rotate(${-rotation}deg) ${translate}`}}>
                 {progress}
                 <text style={{ transform:`translate(${current.minute_progress && !current.minutes ? 7 : 0}px,0px)`}}>
@@ -105,10 +113,11 @@ function HourMarkers({
           )
         }
 
-        if ((!isCurrent || !dot_skip_current) && dot_split && _h % (24 / dot_split) === 0) {
+        // if not current and skip-it AND based on dot_split
+        if (!(dot_skip_current && isCurrent) && isPartOfSplit(_h, dot_split)) {
           const translate = `translate(0, ${100 - (dot_size * 2) - dot_depth - 2}px)`
           dot = <circle
-            className="hour-marker-dot"
+            className={styles.hourMarkerDot}
             cx="0" cy="0" r={dot_size}
             style={{transform:`rotate(${rotation}deg) ${translate}`}}
             strokeWidth={stroke_width}

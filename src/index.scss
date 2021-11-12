@@ -1,0 +1,10 @@
+body {
+  background-image: url('https://source.unsplash.com/1700x900/?clouds'),url('/images/forest.jpg');
+  background-size: cover;
+}
+
+#clock {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}

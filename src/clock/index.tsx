@@ -1,7 +1,7 @@
+import Cn from 'classnames'
 import * as _utils from './_utils'
 import HourMarkers from './hour-markers'
-
-import * as classes from './index.module.scss'
+import * as styles from './index.module.scss'
 
 import IMG_Azimuthal from "/images/Azimuthal_equidistant_projection_SW-2.png"
 import IMG_Azimuthal_land from "/images/Azimuthal_equidistant_projection_SW-no-sea.png"
@@ -38,7 +38,7 @@ function Clock({
 
 
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">
+    <svg className={styles.svg} xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">
       <defs>
         <pattern id="clock-image" x={-globe_size / 2} y={-globe_size / 2} patternUnits="userSpaceOnUse" height="200" width="200">
           <image x="0" y="0" height={globe_size} width={globe_size} xlinkHref={IMG_Azimuthal}></image>
@@ -58,17 +58,23 @@ function Clock({
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image-no-sea)" style={{ filter: `grayscale(1) contrast(0) brightness(0)`/*filter: grayscale(1) contrast(1.8) brightness(1);*/}}></circle>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image)" mask="url(#shadowMask)"></circle>
       </g>
-      <circle cx="0" cy="0" r="3" fill="#0000" id="second-ripple" className={second_ripple ? 'active' : ''} style={{stroke:second_ripple_color}}></circle>
+      <circle
+        cx="0" cy="0" r="3" fill="#0000"
+        className={Cn(
+          styles.secondRipple, { [styles.secondRippleActive]: second_ripple }
+        )}
+        style={{stroke:second_ripple_color}}
+      ></circle>
       <HourMarkers _now={now} offset={offset} {...hour}/>
       {/* ${this.props._renderMinuteHand({ minutes })} */}
       <g className="globe-rotate"><g id="sun-marker-rotate"><g id="sun-marker-translate">
-        ${sun_marker && <circle id="sun" cx="0" cy="0" r="3"></circle>}
+        {sun_marker && <circle className={styles.sun} cx="0" cy="0" r="3"></circle>}
       </g></g></g>
       <g className="globe-rotate">
         <g id="location-marker-rotate">
           <g id="location-marker-translate">
             <g style={{transform:`scale(1.5)`,...location_marker_day_highlight}} fill="#f00" stroke="#f00" strokeWidth=".2">
-              ${location_marker &&
+              {location_marker &&
                 <g>
                   <circle cx="0" cy="0" r="1.5" fill="#fff0"></circle>
                   <circle cx="0" cy="0" r=".3" strokeWidth=".5"></circle>

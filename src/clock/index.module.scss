@@ -1,84 +1,39 @@
-body {
-  background-image: url('https://source.unsplash.com/1700x900/?clouds'),url('/images/forest.jpg');
-  background-size: cover;
-}
-#clock {
-  display: flex;
-  justify-content: center;
-  margin-top: 50px;
-}
-#clock svg {
+.svg {
   width: 650px;
   height: 650px;
 }
 
-#clock svg #hour-markers .hour-marker-dot {
-  opacity: 0.5;
-}
+// svg #minute-text {
+//   font-family: monospace;
+//   /* font-weight: 200; */
+//   text-shadow: 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
+// }
+// svg #minute-text text {
+//   transform-box: fill-box;
+//   transform-origin: 3px 3px;
+// }
+// svg #minute-text text.tick {
+//   transform-origin: 4.5px 3px;
+// }
 
-#clock svg .hour-marker-text > g {
-  transform-box: fill-box;
-  transform-origin: 0px 12px;
-  font-size: 0.5em;
-  /* font-size: 1em; */
-  stroke-width: 0px;
-  fill: #fff;
-  font-weight: bold;
-  /* letter-spacing: -0.5px; */
-  text-shadow: 0px 0px 6px #000, 0px 0px 6px #000, 0px 0px 6px #000, 0px 0px 6px #000, 0px 0px 6px #000, 0px 0px 6px #000;
-  opacity: 0.5;
-}
-#clock svg .hour-marker-text.current-hour > g {
-  font-size: 1em;
-  transform-origin: 0px 12px;
-  opacity: 1;
-}
-#clock svg .hour-marker-text tspan.tick {
-  font-size: .8em;
-  opacity: 0;
-  transition: opacity .25s linear;
-}
-#clock svg .hour-marker-text tspan.tick.on {
-  opacity: 1;
-}
-#clock svg .hour-marker-text tspan.minutes {
-  font-size: 0.65em;
-  font-weight: 400;
-}
-#clock svg .hour-marker-text tspan.pm {
-  font-size: 0.5em;
-  font-weight: normal;
-}
-
-#clock svg #minute-text {
-  font-family: monospace;
-  /* font-weight: 200; */
-  text-shadow: 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
-}
-#clock svg #minute-text text {
-  transform-box: fill-box;
-  transform-origin: 3px 3px;
-}
-#clock svg #minute-text text.tick {
-  transform-origin: 4.5px 3px;
-}
-
-#sun {
+.sun {
   fill: yellow;
   filter: drop-shadow(0px 0px 0.1px #ffa500) drop-shadow(0px 0px 1px #fa0f) drop-shadow(0px 0px 1px #fa09) drop-shadow(0px 0px 1px #fa09) drop-shadow(0px 0px 1px #ff09) drop-shadow(0px 0px 2px #fff) drop-shadow(0px 0px 3px #fff);
 }
 
-#second-ripple{
+.secondRipple{
   display: none;
+
+  &.secondRippleActive {
+    display: block;
+    /* opacity: 0.3; */
+    /* stroke: #f00; */
+    /* filter: blur(0); */
+    stroke-width: .2;
+    animation: ripple 1s linear infinite;
+  }
 }
-#second-ripple.active {
-  display: block;
-  /* opacity: 0.3; */
-  /* stroke: #f00; */
-  /* filter: blur(0); */
-  stroke-width: .2;
-  animation: ripple 1s linear infinite;
-}
+
 @keyframes ripple {
   0% {
   }
