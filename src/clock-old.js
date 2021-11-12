@@ -394,36 +394,37 @@ class Clock {
   }
 }
 
+export default Clock
 
-let clock
-clock = new Clock
-clock.start()
+// let clock
+// clock = new Clock
+// clock.start()
 
-clock.stop()
-clock = new Clock({
-  hour: {
-    direction_switch: true,
-    hand: {
-      // width: 1,
-      depth: 70,
-    },
-    // hand.color: 'yellow',
-    is24h: true,
-    marker: {
-      text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 24.5,
-      dot_skip_current: false,
-    },
-    now: {
-      // show: false,
-      minutes: false,
-      seconds_ticker: false,
-      // minute_progress: true,
-      minute_progress_split: 4*3,
-    }
-  },
-  second_ripple: true,
-  second_ripple_color: '#f0f',
-  // location_marker: false,
-  offset: 0,
-  // minute: { show_hand: true },
-}).draw().start()
+// clock.stop()
+// clock = new Clock({
+//   hour: {
+//     direction_switch: true,
+//     hand: {
+//       // width: 1,
+//       depth: 70,
+//     },
+//     // hand.color: 'yellow',
+//     is24h: true,
+//     marker: {
+//       text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 24.5,
+//       dot_skip_current: false,
+//     },
+//     now: {
+//       // show: false,
+//       minutes: false,
+//       seconds_ticker: false,
+//       // minute_progress: true,
+//       minute_progress_split: 4*3,
+//     }
+//   },
+//   second_ripple: true,
+//   second_ripple_color: '#f0f',
+//   // location_marker: false,
+//   offset: 0,
+//   // minute: { show_hand: true },
+// }).draw().start()
