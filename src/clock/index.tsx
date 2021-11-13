@@ -3,6 +3,7 @@ import * as _utils from './_utils'
 import HourMarkers from './hour-markers'
 import HourHand from './hour-hand'
 import Sun from './sun'
+import LocationMarker from './location-marker'
 
 import * as styles from './index.module.scss'
 
@@ -21,8 +22,10 @@ function Clock({
   location_marker = true,
   sun_marker = true,
   fixed_sun = true,
+  globe_offset = 0,
   date_time = new Date,
 } = {}) {
+  const globe_size = 170
 
   const now = {
     date_time,
@@ -34,10 +37,13 @@ function Clock({
   }
   now.num_minutes = now.minutes + now.seconds / 60
   now.num_hours = now.hours + now.num_minutes / 60
-  const location_marker_day_highlight = now.num_hours > 6.5 && now.num_hours < 17.5 ? {filter: `drop-shadow(0px 0px 0.2px #fff) drop-shadow(0px 0px 0.2px #fff)`} : {}
-  // <circle cx="0" cy="0" r="100" fill="#ccc"/>
-  const globe_size = 170
 
+  const sun_pos = _utils.getSunPosition(now.date_time)
+  let globe_rotate = _utils.hToA(globe_offset)
+  if (fixed_sun) {
+    globe_rotate += sun_pos.longitude + _utils.hToA(hour.offset) + 180
+  }
+  const shadow_rotate = 180 - sun_pos.longitude
 
   return (
     <svg className={styles.svg} xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">
@@ -51,11 +57,11 @@ function Clock({
       </defs>
       <mask id="shadowMask">
         <g style={{ transform: `rotate(${0 && _utils.hToA(hour.offset)}deg)`}}>
-        <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
-        <rect className="shadow-rotate" x="-100" y="-100" width="200" height="100" fill="white" style={{filter: `drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px)`}}></rect>
+          <rect x="-100" y="-100" width="200" height="200" fill="#000"></rect>
+          <rect transform={`rotate(${shadow_rotate})`} x="-100" y="-100" width="200" height="100" fill="white" style={{filter: `drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px)`}}></rect>
         </g>
       </mask>
-      <g id="clock-bg" className="globe-rotate">
+      <g transform={`rotate(${globe_rotate})`}>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image)" style={{filter: `grayscale(0) brightness(0.4)`}}></circle>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image-no-sea)" style={{ filter: `grayscale(1) contrast(0) brightness(0)`/*filter: grayscale(1) contrast(1.8) brightness(1);*/}}></circle>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image)" mask="url(#shadowMask)"></circle>
@@ -69,25 +75,8 @@ function Clock({
       ></circle>
       <HourMarkers _now={now} {...hour}/>
       {/* ${this.props._renderMinuteHand({ minutes })} */}
-      {sun_marker && <Sun />}
-      <g className="globe-rotate">
-        <g id="location-marker-rotate">
-          <g id="location-marker-translate">
-            <g style={{transform:`scale(1.5)`,...location_marker_day_highlight}} fill="#f00" stroke="#f00" strokeWidth=".2">
-              {location_marker &&
-                <g>
-                  <circle cx="0" cy="0" r="1.5" fill="#fff0"></circle>
-                  <circle cx="0" cy="0" r=".3" strokeWidth=".5"></circle>
-                  <line x1="1.5" y1="0" x2="2.4" y2="0"></line>
-                  <line x1="-1.5" y1="0" x2="-2.4" y2="0"></line>
-                  <line y1="1.5" x1="0" y2="2.4" x2="0"></line>
-                  <line y1="-1.5" x1="0" y2="-2.4" x2="0"></line>
-                </g>
-              }
-            </g>
-          </g>
-        </g>
-      </g>
+      {sun_marker && <Sun now={now} globe_rotate={globe_rotate} />}
+      {location_marker && <LocationMarker now={now} globe_rotate={globe_rotate} />}
       <HourHand _now={now} {...hour} />
       {/* <g>${this._renderMinuteText({ minutes, seconds })}</g> */}
     </svg>

@@ -35,7 +35,7 @@ function App() {
   return (
     <div className="container">
       <div id="clock">
-        <Clock date_time={now} second_ripple={undefined} {...{}}/>
+        <Clock date_time={now} hour={{ direction_switch: true}} second_ripple={undefined} {...{}}/>
       </div>
     </div>
   )
