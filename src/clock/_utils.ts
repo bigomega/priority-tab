@@ -39,19 +39,23 @@ export function getCurrentLocation(cb, err?) {
   if (location?.coords) {
     return cb(location)
   }
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(position => {
-      // position = { coords: { latitude: 40.7128, longitude: -74.0060}} // NY
-      // position = { coords: { latitude: -33.8688, longitude: 151.2093}} // Sydney
-      // position = { coords: { latitude: 22.3193, longitude: 114.1694}} // HK
-      // position = { coords: { latitude: 52.5200, longitude: 13.4050}} // Berlin
-      location = position
-      cb(position)
-    }, error => {
-      console.error(error)
-      err(error)
-    });
-  } else {
-    err({ msg: 'Object missing: navigator.geolocation' })
+  try {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        // position = { coords: { latitude: 40.7128, longitude: -74.0060}} // NY
+        // position = { coords: { latitude: -33.8688, longitude: 151.2093}} // Sydney
+        // position = { coords: { latitude: 22.3193, longitude: 114.1694}} // HK
+        // position = { coords: { latitude: 52.5200, longitude: 13.4050}} // Berlin
+        location = position
+        cb(position)
+      }, error => {
+        console.error(error)
+        err(error)
+      });
+    } else {
+      err({ msg: 'Object missing: navigator.geolocation' })
+    }
+  } catch (error) {
+    err(error)
   }
 }
