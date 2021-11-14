@@ -1,5 +1,6 @@
 import * as React from 'react'
 import Cn from 'classnames'
+import Progress from './progress'
 import * as _utils from './_utils'
 import * as styles from './hour-markers.module.scss'
 
@@ -26,93 +27,47 @@ function HourMarkers({
       display = true,
       minutes = true,
       seconds_ticker = true,
-      minute_progress = false,
-      minute_progress_split = 4,
+      // check progress for other options
+      minute_progress = { display: false },
     } = {},
   } = {},
   _now,
 }) {
-  const stroke_width = .5
-  const progress_height = 2
-  const progress_width = 25
-  const progress_color = '#fff'
-  const progress_offset = 2
-  const progress_stroke_width = .5
+  const dot_stroke_width = .5
 
   const _dot = getDotConfig(dot)
   const _text = getTextConfig(text)
-  const current = {
-    display, minutes, seconds_ticker, minute_progress, minute_progress_split,
-  }
+  // for ease of reading & understanding below
+  const current = { display, minutes, seconds_ticker }
+  const show_progress = minute_progress.display
   return (
     <g id="hour-markers" fill="#fff" stroke="#000">
       {[...Array(24)].map((_, _h) => {
         const isCurrent = _h === _now.hours && current.display
         const rotation = _utils.getHourTheta({ hours: _h, direction_switch, offset })
-        let hour_text = is24h ? _h : (_h % 12 || 12)
-        let hour_text_tick: React.ReactElement,
-          hour_text_minutes: React.ReactElement,
-          hour_text_ampm: React.ReactElement,
-          text: React.ReactElement,
-          dot: React.ReactElement,
-          progress: React.ReactElement
-        ;
-
-        // if (!isCurrent) { hour_text = this._nDigits(hour_text) }
-        if (isCurrent && current.seconds_ticker) {
-          hour_text_tick = <tspan className={Cn(styles.tick, {[styles.on]: _now.seconds % 2})}>:</tspan>
-        }
-        if (isCurrent && current.minutes) {
-          hour_text_minutes = <tspan className={styles.minutes}>{_utils.nDigits(_now.minutes)}</tspan>
-        }
-        if (!is24h && _h > 11) {
-          hour_text_ampm = <tspan className={styles.pm}>p</tspan>
-        }
-
-        if (isCurrent && current.minute_progress) {
-          progress = (
-            <g>
-              <rect
-                width={progress_width}
-                height={progress_height}
-                style={{fill:'#0003', strokeWidth: progress_stroke_width, stroke:'#000'}}
-                x="0"
-                y={progress_offset}
-              ></rect>
-              <rect
-                width={(_now.minutes / 60 * progress_width) - progress_stroke_width}
-                height={progress_height - progress_stroke_width}
-                style={{fill:progress_color, strokeWidth:0, stroke:'#000'}}
-                x={progress_stroke_width / 2}
-                y={progress_offset + progress_stroke_width / 2}
-              ></rect>
-              <g>
-                {[...Array(current.minute_progress_split)].map((_, i) => {
-                  const x_offset = progress_width * i / current.minute_progress_split
-                  return (
-                    <line
-                      x1="${x_offset}"
-                      y1="${progress_offset}"
-                      x2="${x_offset}"
-                      y2="${progress_height + progress_offset}"
-                      style={{strokeWidth:progress_stroke_width,stroke: '#0009'}}
-                    ></line>
-                  )
-                })}
-              </g>
-            </g>
-          )
-        }
+        let text: React.ReactElement, dot: React.ReactElement
 
         // if Current. OR. based on text split
         if (isCurrent || isPartOfSplit(_h, _text.split)) {
-          const translate = isCurrent ? `translate(${current.minutes || current.minute_progress ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'
+          const translate = isCurrent ? `translate(${current.minutes || show_progress ? -13 : -6}px, 5px)` : 'translate(-4px, 8px)'
           text = (
             <g className={Cn(styles.hourMarkerText, {[styles.currentHour]: isCurrent})} style={{transform:`rotate(${rotation}deg) translate(0, ${100 - _text.depth}px)`}}>
               <g style={{ transform: `rotate(${-rotation}deg) ${translate}`}}>
-                {progress}
-                <text style={{ transform:`translate(${current.minute_progress && !current.minutes ? 7 : 0}px,0px)`}}>
-                  {hour_text}
+                {isCurrent && show_progress &&
+                  <Progress percent={_now.minutes / 60} {...minute_progress} />
+                }
+                <text style={{ transform:`translate(${show_progress && !current.minutes ? 5 : 0}px,0px)`}}>
+                  <tspan>{is24h ? _h : (_h % 12 || 12)}</tspan>
+                  {isCurrent && current.seconds_ticker &&
+                    <tspan className={Cn(styles.tick, { [styles.on]: _now.seconds % 2 })}>:</tspan>
+                  }
+                  {isCurrent && current.minutes &&
+                    <tspan className={styles.minutes}>{_utils.nDigits(_now.minutes)}</tspan>
+                  }
+                  {
+                    !is24h && _h > 11 &&
+                    <tspan className={styles.pm}>p</tspan>
+                  }
                 </text>
               </g>
             </g>
@@ -126,9 +81,10 @@ function HourMarkers({
             className={styles.hourMarkerDot}
             cx="0" cy="0" r={_dot.size}
             style={{transform:`rotate(${rotation}deg) ${translate}`}}
-            strokeWidth={stroke_width}
+            strokeWidth={dot_stroke_width}
           ></circle>
         }
+
         return <g key={_h}>{dot}{text}</g>
       })}
     </g>

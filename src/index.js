@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom"
+import { useState, useEffect } from 'react'
 import Clock from "./clock"
 
 const clock_config = {
@@ -6,39 +7,51 @@ const clock_config = {
     direction_switch: true,
     hand: {
       // width: 1,
-      depth: 70,
+      depth: 60,
     },
     // hand.color: 'yellow',
-    is24h: true,
     marker: {
-      text_split: 0, dot_split: 24, dot_size: 1.5, dot_depth: 24.5,
-      // dot_skip_current: false,
+      // is24h: false,
+      text: { split: 0 },
+      dot: { split: 24, size: 1.5, depth: 24.5,
+        // dot_skip_current: false,
+      },
       now: {
-        // show: false,
+        // display: false,
         minutes: false,
         seconds_ticker: false,
-        // minute_progress: true,
-        minute_progress_split: 4 * 3,
+        minute_progress: {
+          display: true,
+          // width: 30,
+          // split: 4 * 3,
+        },
       }
     },
   },
   second_ripple: true,
   second_ripple_color: '#f0f',
   // location_marker: false,
-  offset: 0,
   // minute: { show_hand: true },
 }
 
-function App() {
-  let now
-  // now = new Date('12/10/2020 3:14')
+function App({start_time = new Date}) {
+  const [now, setNow] = useState(start_time)
+  useEffect(() => {
+    const tickInterval = setInterval(() => {
+      now.setSeconds(now.getSeconds() + 1)
+      setNow(new Date(now.getTime()))
+    }, 1000)
+    return () => clearInterval(tickInterval)
+  })
+
   return (
     <div className="container">
       <div id="clock">
-        <Clock date_time={now} hour={{ direction_switch: true}} second_ripple={undefined} {...{}}/>
+        <Clock date_time={now} {...clock_config}/>
       </div>
     </div>
   )
 }
-
-ReactDOM.render(<App />, document.getElementById("app"))
+let start_time
+// start_time = new Date('10/13/2021 6:33')
+ReactDOM.render(<App start_time={start_time}/>, document.getElementById("app"))
