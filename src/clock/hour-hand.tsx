@@ -2,8 +2,8 @@ import { getHourTheta } from './_utils'
 
 
 function HourHand({
-  direction_switch = false,
-  offset = 0,
+  direction_switch,
+  offset,
   hand: {
     color = '#fff',
     depth = 60,
@@ -17,7 +17,7 @@ function HourHand({
   const rotation = getHourTheta({ hours: _now.num_hours, offset, direction_switch })
   return (
     <g
-      style={{transform:`rotate(${rotation}deg)`}}
+      style={{transform:`rotate(${rotation.toFixed(1)}deg)`}}
       stroke={stroke_color}
       fill={color}
       strokeWidth={stroke_width}
