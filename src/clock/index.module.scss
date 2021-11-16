@@ -27,6 +27,7 @@
     /* filter: blur(0); */
     stroke-width: .2;
     animation: ripple 1s linear infinite;
+    opacity: 1;
   }
 }
 
@@ -38,11 +39,13 @@
     filter: blur(.05px);
     transform: scale(8);
     stroke-width: .05;
+    opacity: .5;
   }
   100% {
     stroke: #f000;
     filter: blur(.05px);
     transform: scale(8);
     stroke-width: 0.05;
+    opacity: 0;
   }
 }

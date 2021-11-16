@@ -8,24 +8,19 @@ const absAngle = (ang = 0) => ang + (ang < 0 ? 360 : 0)
 
 
 function getLocalEventDefaults({
+  color, depth, spread, stroke_width, text_color, inactive_opacity,
   at,
   from = 0,
   to = 0,
-  color = '#000',
-  depth = 60,
-  spread = 10,
-  stroke_width = .2,
   text = '',
-  text_color = '#fff',
   at_highlight_duration = 1,
   at_text_offset_deg = 0,
   page_background_image_tags = ['random', 'clouds,night'],
   // clock_image_tags = ['clock'],
-  // reminder: false,
-  // reminder_text: '',
+  // reminder: true,
   // reminder_dismissible: '',
 }){
-  return { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at }
+  return { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at, inactive_opacity }
 }
 
 function Events({
@@ -45,11 +40,11 @@ function Events({
     return <g></g>
   }
 
-  const global_config = { color, depth, spread, stroke_width, text_color }
+  const global_config = { color, depth, spread, stroke_width, text_color, inactive_opacity }
   return (
     <g>
       {list.map((local_event, i) => {
-        const { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at } = getLocalEventDefaults({...global_config, ...local_event})
+        const { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at, inactive_opacity } = getLocalEventDefaults({...global_config, ...local_event})
         const from_hours = militaryToDecimal(from)
         const to_hours = militaryToDecimal(to)
         const id = from + text + i

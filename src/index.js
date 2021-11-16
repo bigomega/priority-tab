@@ -16,7 +16,7 @@ function App({start_time = new Date}) {
   return (
     <div className="container">
       <div id="clock">
-        <Clock date_time={now} {..._configs.author.config}/>
+        <Clock date_time={now} {..._configs.author.clock}/>
       </div>
     </div>
   )

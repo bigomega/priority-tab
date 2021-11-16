@@ -1,8 +1,5 @@
-import _author from './author'
-export const author = {
-  title: 'Author\'s preference',
-  screenshot: '',
-  config: _author
-}
+import author from './author'
+
+export const author = author
 
 export default { author }
