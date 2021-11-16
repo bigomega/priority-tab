@@ -12,20 +12,21 @@ import IMG_Azimuthal from "/images/Azimuthal_equidistant_projection_SW-2.png"
 import IMG_Azimuthal_land from "/images/Azimuthal_equidistant_projection_SW-no-sea.png"
 
 function Clock({
+  background_opacity = 1,
   direction_switch = true,
   offset = 0,
-  hour = {},
-  minute: {
-    show_hand = false,
-    show_text = false,
-    seconds_ticker = true,
-  } = {},
   second_ripple = false,
   second_ripple_color = '#f00',
   location_marker = true,
   sun_marker = true,
   fixed_sun = true,
   globe_offset = 0,
+  hour = {},
+  minute: {
+    show_hand = false,
+    show_text = false,
+    seconds_ticker = true,
+  } = {},
   events = {},
   date_time = new Date,
 } = {}) {
@@ -65,7 +66,7 @@ function Clock({
           <rect transform={`rotate(${shadow_rotate})`} x="-100" y="-100" width="200" height="100" fill="white" style={{filter: `drop-shadow(white 0px 0px 1px) drop-shadow(white 0px 0px 2px) drop-shadow(white 0px 0px 3px)`}}></rect>
         </g>
       </mask>
-      <g transform={`rotate(${globe_rotate})`}>
+      <g transform={`rotate(${globe_rotate})`} opacity={background_opacity}>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image)" style={{filter: `grayscale(0) brightness(0.4)`}}></circle>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image-no-sea)" style={{ filter: `grayscale(1) contrast(0) brightness(0)`/*filter: grayscale(1) contrast(1.8) brightness(1);*/}}></circle>
         <circle cx="0" cy="0" r={globe_size / 2} fill="url(#clock-image)" mask="url(#shadowMask)"></circle>
@@ -80,8 +81,10 @@ function Clock({
       <Events _now={now} {...{ offset, direction_switch }} {...events}/>
       <HourMarkers _now={now} {...{ offset, direction_switch }} {...hour}/>
       {/* ${this.props._renderMinuteHand({ minutes })} */}
-      {sun_marker && <Sun now={now} globe_rotate={globe_rotate} />}
-      {location_marker && <LocationMarker now={now} globe_rotate={globe_rotate} />}
+      <g opacity={background_opacity}>
+        {sun_marker && <Sun now={now} globe_rotate={globe_rotate} />}
+        {location_marker && <LocationMarker now={now} globe_rotate={globe_rotate} />}
+      </g>
       <HourHand _now={now} {...{offset, direction_switch}} {...hour} />
       {/* <g>${this._renderMinuteText({ minutes, seconds })}</g> */}
     </svg>

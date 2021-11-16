@@ -19,13 +19,13 @@ function getLocalEventDefaults({
   text_color = '#fff',
   at_highlight_duration = 1,
   at_text_offset_deg = 0,
-  background_image_tags = ['random', 'clouds,night'],
+  page_background_image_tags = ['random', 'clouds,night'],
   // clock_image_tags = ['clock'],
   // reminder: false,
   // reminder_text: '',
   // reminder_dismissible: '',
 }){
-  return { from, to, color, depth, spread, text, background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at }
+  return { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at }
 }
 
 function Events({
@@ -49,7 +49,7 @@ function Events({
   return (
     <g>
       {list.map((local_event, i) => {
-        const { from, to, color, depth, spread, text, background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at } = getLocalEventDefaults({...global_config, ...local_event})
+        const { from, to, color, depth, spread, text, page_background_image_tags, text_color, at_highlight_duration, at_text_offset_deg, stroke_width, at } = getLocalEventDefaults({...global_config, ...local_event})
         const from_hours = militaryToDecimal(from)
         const to_hours = militaryToDecimal(to)
         const id = from + text + i
@@ -65,7 +65,7 @@ function Events({
               style={{ opacity: is_active ? 1 : inactive_opacity }}
             >
               <text
-                style={{ textShadow: `0 0 10px white, 0 0 10px white` }}
+                style={{ textShadow: Array(2).fill('0 0 30px white').join(',') }}
                 transform={`rotate(${-at_angle-at_text_offset_deg})`}
                 fontSize={spread} fill={text_color}
               >
@@ -97,14 +97,17 @@ function Events({
             <Arc
               id={id}
               type="text-ref"
+              // text_direction={true}
               transform={`rotate(${rotate})`}
               end_angle={dist}
               strokeWidth={stroke_width}
               {...{ depth, spread }}
             />
-            <text fontSize={spread - stroke_width * 2} fill={text_color}>
-              <textPath xmlSpace="preserve" xlinkHref={'#'+id}>{text}</textPath>
-            </text>
+            {is_active &&
+              <text fontSize={spread - stroke_width * 2} fill={text_color}>
+                <textPath xmlSpace="preserve" xlinkHref={'#'+id}>{text}</textPath>
+              </text>
+            }
           </g>
         )
       })}
